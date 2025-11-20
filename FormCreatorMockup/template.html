@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nyan File Parser</title>
+    <script>
+        function loadFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.nyan';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const lines = e.target.result.split('\n');
+                    const container = document.getElementById('container');
+                    container.innerHTML = '';
+                    lines.forEach(line => {
+                        if (line.trim() !== '') {
+//console.log("Not an octopus: ", line);
+				const lineWork = line.slice(1,-1);
+
+                            const [FieldName, FieldType, AdditionalData] = lineWork.split(',');
+                            let element;
+//console.log(FieldType);
+                            switch (FieldType.split(": ")[1]) {
+                                case 'TextData':
+console.log("not an octopus");
+                                    element = document.createElement('input');
+                                    element.type = 'text';
+                                    break;
+                                case 'StaticData':
+                                    element = document.createElement('p');
+                                    element.textContent = rest.join(',').trim();
+                                    break;
+                                case 'MeasurementData':
+                                case 'NumericalData':
+                                    element = document.createElement('input');
+                                    element.type = 'number';
+                                    break;
+                            }
+                            if (element) {
+                                container.appendChild(element);
+                                container.appendChild(document.createElement('br'));
+                            }
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+    </script>
+</head>
+<body>
+    <button onclick="loadFile()">Load .nyan File</button>
+    <div id="container"></div>
+</body>
+</html>

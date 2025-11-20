@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyan File Parser</title>
+    <script>
+        function parseNyanFile(content) {
+            const lines = content.split('\n');
+            
+            lines.forEach(line => {
+console.log("Not an octopus");
+            const result = document.createElement('div');
+                const field = JSON.parse(line);
+                if (field.FieldType === "NumericalData") {
+                    result.innerHTML = `${field.FieldName}: ${Math.random()}\n`;
+                } else if (field.FieldType === "TextData") {
+                    result = `${field.FieldName}: Hello World\n`;
+                } else if (field.FieldType === "StaticData") {
+                    result = `${field.FieldName}: ${field.AdditionalData}\n`;
+                } else if (field.FieldType === "MeasurementData") {
+                    result = `${field.FieldName}: ${Math.random()} ${field.AdditionalData}\n`;
+                }
+
+            document.getElementByID("file-fields").appendChild(result);
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.name.endsWith('.nyan')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    parseNyanFile(e.target.result);
+                }
+                reader.readAsText(file);
+            } else {
+                alert("Please select a valid .nyan file.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Nyan File Parser</h1>
+    <input type="file" id="fileInput" onchange="handleFileSelect(event)">
+<div id = "file-fields"></div>
+</body>
+</html>

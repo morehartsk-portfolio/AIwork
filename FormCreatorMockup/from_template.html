@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Form Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .top-right {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+        .top-center {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .container {
+            margin: 20px;
+        }
+        .field-container {
+            margin-bottom: 10px;
+        }
+        .field-label {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-right">
+        <button id="saveBtn">Save</button>
+        <button id="exportBtn">Export</button>
+    </div>
+    <div class="top-center">
+        <button id="addFieldBtn">+ Add new Field</button>
+    </div>
+    <div id="dynamicFields"></div>
+
+    <div id="addFieldContainer" style="display: none;">
+        <div class="container">
+            <label>Field name:</label>
+            <input type="text" id="fieldNameInput">
+            <br>
+            <label>Field type:</label>
+            <select id="fieldTypeSelect">
+                <option value="Static">Static</option>
+                <option value="Text">Text</option>
+                <option value="Numerical">Numerical</option>
+                <option value="Measurement">Measurement</option>
+            </select>
+            <div id="additionalField" style="display: none;">
+                <label>Unit:</label>
+                <input type="text" id="unitInput">
+            </div>
+            <br>
+            <button onclick="createField()">Create</button>
+            <button onclick="cancelField()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let fields = [];
+
+        document.getElementById('addFieldBtn').addEventListener('click', () => {
+            document.getElementById('addFieldContainer').style.display = 'block';
+        });
+
+        document.getElementById('fieldTypeSelect').addEventListener('change', (e) => {
+            const type = e.target.value;
+            const additionalField = document.getElementById('additionalField');
+            if (type === 'Measurement') {
+                additionalField.style.display = 'block';
+            } else {
+                additionalField.style.display = 'none';
+            }
+        });
+
+        function createField() {
+            const fieldName = document.getElementById('fieldNameInput').value;
+            const fieldType = document.getElementById('fieldTypeSelect').value;
+            let additional = '';
+
+            if (fieldType === 'Measurement') {
+                additional = document.getElementById('unitInput').value;
+            }
+
+            const field = { FieldLabel: fieldName, Type: fieldType, Additional: additional };
+            fields.push(field);
+
+            const fieldContainer = document.createElement('div');
+            fieldContainer.classList.add('field-container');
+
+            if (fieldType === 'Static') {
+                fieldContainer.innerHTML = `<label>${fieldName}:</label> <span class="field-label">${additional}</span>`;
+            } else if (fieldType === 'Measurement') {
+                fieldContainer.innerHTML = `<label>${fieldName}:</label> <input type="number"> <span>${additional}</span>`;
+            } else if (fieldType === 'Text') {
+                fieldContainer.innerHTML = `<label>${fieldName}:</label> <input type="text">`;
+            } else if (fieldType === 'Numerical') {
+                fieldContainer.innerHTML = `<label>${fieldName}:</label> <input type="number">`;
+            }
+
+            document.getElementById('dynamicFields').insertBefore(fieldContainer, document.getElementById('addFieldBtn'));
+
+            document.getElementById('addFieldContainer').style.display = 'none';
+            document.getElementById('fieldNameInput').value = '';
+            document.getElementById('fieldTypeSelect').value = 'Static';
+            document.getElementById('unitInput').value = '';
+        }
+
+        function cancelField() {
+            document.getElementById('addFieldContainer').style.display = 'none';
+            document.getElementById('fieldNameInput').value = '';
+            document.getElementById('fieldTypeSelect').value = 'Static';
+            document.getElementById('unitInput').value = '';
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const fileName = prompt("Enter file name:");
+            if (fileName) {
+                const blob = new Blob([JSON.stringify(fields, null, 2)], {type: 'application/json'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName + '.nyan';
+                link.click();
+            }
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const fileName = prompt("Enter file name:");
+            if (fileName) {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                fields.forEach(field => {
+                    csvContent += `${field.FieldLabel},${field.Type},${field.Additional}\n`;
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", fileName + ".csv");
+                document.body.appendChild(link);
+                link.click();
+            }
+        });
+
+        fetch('data.nyan')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    const helloWorld = document.createElement('div');
+                    helloWorld.innerHTML = '<span style="color: green;">Hello world</span>';
+                    document.body.appendChild(helloWorld);
+                } else {
+                    data.forEach(field => {
+                        createFieldFromData(field);
+                    });
+                }
+            })
+            .catch(() => {
+                const helloWorld = document.createElement('div');
+                helloWorld.innerHTML = '<span style="color: green;">Hello world</span>';
+                document.body.appendChild(helloWorld);
+            });
+
+        function createFieldFromData(field) {
+            const fieldContainer = document.createElement('div');
+            fieldContainer.classList.add('field-container');
+
+            if (field.Type === 'Static') {
+                fieldContainer.innerHTML = `<label>${field.FieldLabel}:</label> <span class="field-label">${field.Additional}</span>`;
+            } else if (field.Type === 'Measurement') {
+                fieldContainer.innerHTML = `<label>${field.FieldLabel}:</label> <input type="number"> <span>${field.Additional}</span>`;
+            } else if (field.Type === 'Text') {
+                fieldContainer.innerHTML = `<label>${field.FieldLabel}:</label> <input type="text">`;
+            } else if (field.Type === 'Numerical') {
+                fieldContainer.innerHTML = `<label>${field.FieldLabel}:</label> <input type="number">`;
+            }
+
+            document.getElementById('dynamicFields').insertBefore(fieldContainer, document.getElementById('addFieldBtn'));
+        }
+    </script>
+</body>
+</html>
